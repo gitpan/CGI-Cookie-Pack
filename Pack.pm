@@ -23,7 +23,7 @@ use CGI::Uricode qw(uri_decode uri_escape uri_unescape);
 ########################################################################
 
 #### Constants #########################################################
-our $VERSION = '0.10'; # 2005-11-08 (since 2003-04-09)
+our $VERSION = '0.11'; # 2005-11-08 (since 2003-04-09)
 ########################################################################
 
 =head1 NAME
@@ -98,7 +98,7 @@ sub packin (%) {
 
 =item packout()
 
-Object-Class method. This method internally using new(), monolith() and decompose() methods. Simply using this method specified with some arguments, you will get unpacked parameters.
+Object-Class method. This method internally using new(), monolith() and decompose() methods. Simply using this method, you will get unpacked parameters. You may utilize unpacked parameters to input into a hash (%).
 
 Argument C<monolith> is optional. If you would decompose a monolithic composed cookie, you must give value of C<monolith> a positive number.
 
@@ -183,7 +183,7 @@ sub monolith ($) {
 
 Object method. Compose cookie(s).
 
-The algorithm is realized by twice character escape. First, C<NAME> and C<VALUE> strings are PEA escaped. PEA escape is escape "%", "=" and "&" characters to "%P", "%E" and "%A" character squences. Then, each C<NAME> and C<VALUE> are paired with "=" character, and these all C<NAME=VALUE> pairs are joined with "&" character to a string. Second, the name of cookie (be given by name() method) and the joined C<NAME=VALUE> pairs string are uri-escaped, and then each uri-escaped strings are paired with "=" character.
+The algorithm is simple as L<CGI::Cookie> do. First, all strings of parameters (both of C<KEY> and C<VALUE>) are uri-escaped. By uri-escape, most of sign characters (including "&" sign) are escaped to "%HH" string. While that, "&" sign can be safely used in "Set-Cookie: " HTTP header because it is a "token" character (for the definition of "token", refer to RFC 2616 L<http://www.ietf.org/rfc/rfc2616.txt>). So second, all uri-escaped parameters (both of C<KEY> and C<VALUE>) are joined by "&" sign as separator to make a single string. Third, at last, name of cookie (of course it is also uri-escaped) and that united string are combined by "=" sign as separater.
 
 If total size of the string excess 4096 bytes limit, the string is splitted to some cookies. Names of each splitted cookies are serialized by following "_" (underbar character) and two digit number. That is, names of cookies are to become like C<$name_XX>. Note that still in a case total size of the string do not excess 4096 byte limit, name of the cookie has serial number (C<$name_00>).
 
@@ -194,69 +194,51 @@ Exceptionally, under monolith mode, splitting won't do. Also cookie name seriali
 sub compose () {
     my $self = shift;
     
-    my $Name = $self->{'name'};
-    unless ($Name) {
+    my $name = $self->{'name'};
+    unless ($name) {
         croak "The name of cookie is not omittable";
     }
     
-    my @avjointed;
-    for (my $i = 0; $i < $#{ $self->{'param'} }; $i += 2) {
-        my($attr, $value) = (${ $self->{'param'} }[$i], ${ $self->{'param'} }[$i + 1]);
-        
-        _escape_PEA($attr );
-        _escape_PEA($value);
-        
-        push @avjointed, "$attr=$value";
+    uri_escape($name);
+    foreach my $string (@{ $self->{'param'} }) {
+        uri_escape($string);
     }
-    my $Value = join '&', @avjointed;
     
-    uri_escape($Name );
-    uri_escape($Value);
+    my $value = join '&', @{ $self->{'param'} };
     
     if ($self->{'monolith'} > 0) {
-        my $NeV = "$Name=$Value";
-        if (length($NeV) > 4096) {
+        my $n_v = "$name=$value";
+        if (length($n_v) > 4096) {
             carp "Size of the cookie is over 4096 bytes"
         }
-        return $NeV;
+        return $n_v;
     }
     else {
-        _cutter($Name, $Value);
+        _cutter($name, $value);
     }
-}
-# escape "%" (Percentage sign), "=" (Equal sign) and "&" (Ampersand sign)
-sub _escape_PEA ($) {
-    utf8::encode($_[0]);
-    
-    $_[0] =~ s/%/%P/g;
-    $_[0] =~ s/=/%E/g;
-    $_[0] =~ s/&/%A/g;
-    
-    utf8::decode($_[0]);
-    return 1;
 }
 
 sub _cutter ($$) {
-    my($Name, $Value) = @_;
+    my($name, $value) = @_;
     
-    my $limit = 4096 - length($Name) - 4; # 4 = length("_XX=")
+    my $limit = 4096 - length($name) - 4; # 4 = length("_XX=")
     
-    my @Value;
-    while ($Value) {
+    my @value;
+    while ($value) {
         my $part;
-        if ( length($Value) >= $limit) {
-            $part  = substr($Value, 0, $limit);
-            $Value = substr($Value, $limit);
+        if (length($value) >= $limit) {
+            $part  = substr($value, 0, $limit);
+            $value = substr($value, $limit);
         }
         else {
-            $part  = $Value;
-            $Value = '';
+            $part  = $value;
+            $value = '';
         }
-        push @Value, $part;
+        push @value, $part;
     }
     
-    if ($#Value > 19) {
-        if ($#Value > 99) {
+    if ($#value > 19) {
+        if ($#value > 99) {
             croak "Overflowed number of the cookies (max 100)";
         }
         else {
@@ -264,19 +246,19 @@ sub _cutter ($$) {
         }
     }
     
-    for (my $i = 0; $i <= $#Value; $i++ ) {
+    for (my $i = 0; $i <= $#value; $i++ ) {
         my $serial = sprintf('%02d', $i);
-        $Value[$i] = $Name . "_$serial=$Value[$i]";
+        $value[$i] = $name . "_$serial=$value[$i]";
     }
     
-    return @Value;
+    return @value;
 }
 
 =item decompose()
 
 Object method. Decompose parameters from composed cookie(s).
 
-The algorithm is the reversed procedure of composing. First, take out uri-escaped string from splitted cookies in $ENV{'HTTP_COOKIE'}, and then uri-unescape it. Second, extract from that uri_unescaped string to C<NAME> and C<VALUE> pairs, and then PEA unescape them.
+The algorithm is the reversed procedure of composing. First, take out united string from splitted cookies in $ENV{'HTTP_COOKIE'}, and then separate it to individual parameters. Second, uri-unescape all strings of parameters (both of C<KEY> and C<VALUE>).
 
 You could implement the above procedure also at the client side with JavaScript.
 
@@ -287,49 +269,30 @@ Note that monolith mode would affect decomposing procedure, too.
 sub decompose () {
     my $self = shift;
     
-    my $Value;
+    my $value;
     if ($self->{'monolith'} > 0) {
-        $Value = $ENV{'HTTP_COOKIE'};
-        $Value =~ s/^.*?=//;
+        $value = $ENV{'HTTP_COOKIE'};
+        $value =~ s/^.*?=//;
     }
     else {
         my @cookie = split /[\s\t]*;[\s\t]*/, $ENV{'HTTP_COOKIE'};
         
         my @ordered;
         foreach my $cookie (@cookie) {
-            my($Name, $Value) = split /=/, $cookie;
-            $Name =~ s/^.*?_(\d{2})$/$1/;
-            $ordered[$Name] = $Value;
+            my($name, $fragment) = split /=/, $cookie;
+            $name =~ s/^.*?_(\d{2})$/$1/;
+            $ordered[$name] = $fragment;
         }
-        $Value = join '', @ordered;
+        $value = join '', @ordered;
     }
     
-    uri_unescape($Value);
+    my @param = split /&/, $value;
     
-    my @avjointed = split /&/, $Value;
-    
-    my @a_v;
-    for (my $i = 0; $i <= $#avjointed; $i++) {
-        my($attr, $value) = split /=/, $avjointed[$i];
-        
-        _unescape_PEA($attr );
-        _unescape_PEA($value);
-        
-        push @a_v, ($attr, $value);
+    foreach my $string (@param) {
+        uri_unescape($string);
     }
     
-    return @a_v;
-}
-# unescape "%" (Percentage sign), "=" (Equal sign) and "&" (Ampersand sign)
-sub _unescape_PEA ($) {
-    utf8::encode($_[0]);
-    
-    $_[0] =~ s/%A/&/g;
-    $_[0] =~ s/%E/=/g;
-    $_[0] =~ s/%P/%/g;
-    
-    utf8::decode($_[0]);
-    return 1;
+    return @param;
 }
 
 =item datetime_cookie($unix_time)

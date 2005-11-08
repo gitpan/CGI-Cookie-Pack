@@ -1,5 +1,9 @@
 Revision history for Perl extension CGI::Cookie::Pack.
 
+0.11  2005-11-08 22:37:13 JST
+ - reform again with escape algorithm. studying from CGI::Cookie, 
+   now only once escape.
+
 0.10  2005-11-08 15:42:02 JST
  - alter class name from CGI::Cookie::Jam to CGI::Cookie::Pack
  - sweeping reform with algorithm about twice escape. as a result,
