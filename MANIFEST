@@ -1,0 +1,7 @@
+Changes     for revision history
+Pack.pm     Jam a large number of cookies to a small one
+Makefile.PL write Makefile
+MANIFEST    (this file)
+README      for short descriptions about installation
+t/Pack.t    test script for CGI::Cookie::Pack
+META.yml                                 Module meta-data (added by MakeMaker)

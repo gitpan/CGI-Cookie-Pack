@@ -1,0 +1,49 @@
+Revision history for Perl extension CGI::Cookie::Pack.
+
+0.10  2005-11-08 15:42:02 JST
+ - alter class name from CGI::Cookie::Jam to CGI::Cookie::Pack
+ - sweeping reform with algorithm about twice escape. as a result,
+   success to reduce size of packed cookie string.
+ - discard functions: enjam(), dejam(), encryptjam() and decryptjam().
+ - now main functions are implemented as object oriented methods:
+   packin() and packout().
+
+0.09  2005-11-05 19:13:10 JST
+ - change implementation about uri_encode(), uri_decode(), uri_escape()
+   and uri_unescape(). these functions are removed from the module and
+   use them by using the external module CGI::Uricode.
+ - change usage of decryptjam().
+ - now all functions are changed to be exportable functions.
+   no functions are exported by default.
+
+0.08  2005-11-05 10:49:43 JST
+ - minor modifications with algorythm of uri_escape() and
+   uri_unescape().
+
+0.07  2005-11-04 17:22:48 JST
+ - add utf8::encode to the uri_escape() and do utf8::decode to the
+   uri_unescape() to deal with utf8 strings.
+
+0.06  2005-09-28 16:03:18 JST
+ - discard enjam_crypt() and dejam_crypt() functions and replace
+   them with new encryptjam() and decryptjam() functions.
+
+0.05  2005-09-27 16:12:34 JST
+ - modify enjam_crypt() and dejam_crypt() functions to crypt
+   not for the name but only for the value of cookie string.
+
+0.04  2005-09-27 15:33:56 JST
+ - add enjam_crypt() and dejam_crypt() functions.
+
+0.03  2005-09-27 12:30:00 JST
+ - change enjam() as an object method to just as a function.
+ - discard the constructer class method new().
+
+0.02  2005-09-25 16:42:00 JST
+ - add dejam function
+
+0.01  2003-04-10 11:07:02 JST
+ - first release
+
+0.00  2003-04-09
+ - initial version
