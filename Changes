@@ -1,5 +1,8 @@
 Revision history for Perl extension CGI::Cookie::Pack.
 
+0.12  2005-11-10 09:48:41 JST
+ - a minor modification without changing anything about function.
+
 0.11  2005-11-08 22:37:13 JST
  - reform again with escape algorithm. studying from CGI::Cookie, 
    now only once escape.
