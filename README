@@ -1,4 +1,4 @@
-CGI/Cookie/Pack version 0.12
+CGI/Cookie/Pack version 0.13
 ============================
 
  This module is used to pack in/out a large number of parameters to
@@ -19,7 +19,7 @@ DEPENDENCIES
  And,
  this module requires these other modules and libraries:
 
-   CGI::Uricode 0.07 or later
+   CGI::UriThingy 0.08 or later
 
 COPYRIGHT AND LICENCE
 

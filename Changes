@@ -1,5 +1,10 @@
 Revision history for Perl extension CGI::Cookie::Pack.
 
+0.13  2005-11-10 17:01:58 JST
+ - a minor modification along with alternation of class name of 
+   CGI::UriThingy (from CGI::Uricode) on which this module depend.
+ - add a test for datetime_cookie().
+
 0.12  2005-11-10 09:48:41 JST
  - a minor modification without changing anything about function.
 

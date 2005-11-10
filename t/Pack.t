@@ -4,10 +4,11 @@ use strict;
 use warnings;
 use utf8;
 
-use Test::More tests => 10;
+use Test::More tests => 11;
 
 BEGIN {
-    use_ok( 'CGI::Cookie::Pack' );
+    use_ok('CGI::Cookie::Pack');
+    use CGI::Cookie::Pack qw(datetime_cookie);
 };
 
 my @Text = <DATA>;
@@ -155,6 +156,11 @@ for (my $i = 0; $i <= $#param; $i++) {
     }
 }
 is($mismatch, 0, 'packout (monolith) w/ Kanji');
+
+########################################################################
+$got = datetime_cookie(0);
+
+is($got, 'Thu, 01-Jan-1970 00:00:00 GMT', 'datetime_cookie()');
 
 ########################################################################
 __END__
